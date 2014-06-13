@@ -3,7 +3,7 @@
     <head>
         <style>
             .body {background-color:#ffffff;}
-            .title {left:3px;top:5px;color:#FF3300;font-size:18px;}
+            .title {left:100px;top:5px;color:#000000;font-size:18px;}
             .wrap {width:320px;background-color:#FFFFFF;}
             .inputurl {left:3px;width:260px;height:40px;top:200px;}
             .buttoncss {width:55px;height:40px;top:200px;background-image:url(backButtonBg.png);}
@@ -12,15 +12,15 @@
         <script type="text/x-lua">
             <![CDATA[
                 ryt = RYTL:new{};
-                
+
                 globalTable = {};
-                
+
                 save_list = {};
-                
+
                 ewp_debug = false;
-                
+
                 page_ewp_debug = true;
-                
+
                 loadingtag = 3;
                 --[[根据是否为开发模式请求返回数据，开发模式为请求获取静态数据，生产模式为请求其他数据]]--
                 function invoke_trancode(channelid, trancode, params, fun_callback, callback_params)
@@ -35,7 +35,7 @@
                         ryt:post(nil, "channel_s/run", post, fun_callback, callback_params, false);
                     end;
                 end;
-                
+
                 --[[params 参数格式为{trancode="mb001",accno= "12314"}]]--
                 function to_post_body(params)
                     local post = "";
@@ -51,7 +51,7 @@
                     end;
                     return ret_post;
                 end;
-                
+
                 --[[params为请求返回数据，判断返回数据是否错误]]--
                 function error_judge(params)
                     if params["responseCode"] == 200 then
@@ -60,15 +60,15 @@
                         if jsonObj["return"]["error_code"] ~= "000000" then
                             local error_msg = jsonObj["return"]["error_msg"];
                             return -1,error_msg;
-                        else 
-                            return 0,"";    
+                        else
+                            return 0,"";
                         end;
                     else
                         local error_msg = "网络请求失败，请重试！";
                         return -1,error_msg;
                     end;
                 end;
-                
+
                 --[[根据是否为开发模式获取界面，开发模式为请求获取静态界面，生产模式为直接读取客户端本地界面]]--
                 function invoke_page(ebank_file,fun_callback,fun_params)
                     local page =nil;
@@ -82,7 +82,7 @@
                         window:hide(loadingtag);
                     end
                 end;
-                
+
                 --[[请求获取静态界面回调方法]]--
                 function page_callback(params)
                     local page = params["responseBody"];
@@ -90,7 +90,7 @@
                     location:replace(page);
                     window:hide(loadingtag);
                 end;
-                
+
                 function callback(responsedata)
                     if responsedata["responseCode"] == 200 then
                         history:add(responsedata["responseBody"]);
@@ -99,9 +99,9 @@
                         ryt:alert("网络请求失败！");
                     end;
                 end;
-                
+
                 local input = document:getElementsByProperty{name="url"};
-                
+
                 function update()
                     local url = input[1]:getPropertyByName("value");
                     local restr = "name="..url;
@@ -111,6 +111,7 @@
         </script>
     </head>
     <body name='body'>
+        <label class='title' >Hello Emp </label>
         <input type="text" class='inputurl' name='url' value="entrance.xhtml" />
         <input type="button" class="buttoncss" value="访问" onclick="update()"/>
     </body>

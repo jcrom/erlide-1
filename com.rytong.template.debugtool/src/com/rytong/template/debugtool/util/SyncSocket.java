@@ -171,7 +171,7 @@ public class SyncSocket {
                 writer = new PrintWriter(socket.getOutputStream());
                 ErlLogger.debug("new client!");
                 //String inf = reader.readLine();
-               // ErlLogger.debug("inf:"+inf);
+                // ErlLogger.debug("inf:"+inf);
                 //writer.println("connected");
                 //writer.flush();
             } catch (IOException e) {
@@ -191,7 +191,66 @@ public class SyncSocket {
                     //message = reader.readLine();
                     len = reader.read(tmp_chars);
                     ErlLogger.debug("len:~~~"+len);
-//                    if (message.equals("close")){
+                    //                    if (message.equals("close")){
+                    //                        reader.close();
+                    //                        writer.close();
+                    //                        socket.close();
+                    //
+                    //                        for(int i=clients.size()-1; i>=0;i-- ){
+                    //                            if (clients.get(i) == this){
+                    //                                ClientThread temp = clients.get(i);
+                    //                                clients.remove(i);
+                    //                                temp.stop();
+                    //                                return;
+                    //                            }
+                    //                        }
+                    //                    } else {
+                    //                        ErlLogger.debug("get:"+message);
+                    //                        cur_msg = cur_msg.concat(message).concat("\r\n");
+                    //                        download_store.put(this, cur_msg);
+                    //                    }
+
+                    //ErlLogger.debug("tmp_sb:"+tmp_sb.toString());
+                    ErlLogger.debug("len:"+len);
+                    if (len != -1) {
+                        String tmp_str = new String(tmp_chars, 0, len);
+                        String tmp_strs[] = tmp_str.split("#EditorMessage#");
+                        //ErlLogger.debug("tmp_str:"+tmp_str);
+                        ErlLogger.debug("tmp_strs:"+tmp_strs.length);
+                        if (tmp_strs[0].equalsIgnoreCase("EditorMessageStart")){
+
+                            if (tmp_strs.length >2 ){
+                                ErlLogger.debug("EditorMessageStart:"+tmp_strs[2]);
+                                if (tmp_strs[2].equalsIgnoreCase("EditorMessageEnd")){
+                                    ErlLogger.debug("EditorMessageStart: 2");
+                                    download_store.put(this, process_msg(tmp_sb.toString()));
+                                    tmp_sb = new StringBuilder();
+                                } else {
+                                    ErlLogger.debug("EditorMessageStart: else");
+                                    tmp_sb = tmp_sb.append(tmp_strs[1]);
+                                }
+                            } else if (tmp_strs.length == 2) {
+                                ErlLogger.debug("EditorMessageStart: else");
+                                tmp_sb = tmp_sb.append(tmp_strs[1]);
+                            }
+                        } else {
+                            if (tmp_strs.length >1 ){
+                                ErlLogger.debug("tmp_strs[1]:"+tmp_strs[1]);
+                                if (tmp_strs[1].equalsIgnoreCase("EditorMessageEnd")){
+                                    ErlLogger.debug("EditorMessageEnd:");
+                                    tmp_sb = tmp_sb.append(tmp_strs[0]);
+                                    download_store.put(this, process_msg(tmp_sb.toString()));
+                                    tmp_sb = new StringBuilder();
+                                } else {
+                                    ErlLogger.debug("EditorMessageEnd: else");
+                                    tmp_sb = tmp_sb.append(tmp_str);
+                                }
+                            }else {
+                                ErlLogger.debug("EditorMessageEnd: else");
+                                tmp_sb = tmp_sb.append(tmp_str);
+                            }
+                        }
+                    } else {
 //                        reader.close();
 //                        writer.close();
 //                        socket.close();
@@ -201,52 +260,10 @@ public class SyncSocket {
 //                                ClientThread temp = clients.get(i);
 //                                clients.remove(i);
 //                                temp.stop();
-//                                return;
+//                                break;
 //                            }
 //                        }
-//                    } else {
-//                        ErlLogger.debug("get:"+message);
-//                        cur_msg = cur_msg.concat(message).concat("\r\n");
-//                        download_store.put(this, cur_msg);
-//                    }
-
-                    //ErlLogger.debug("tmp_sb:"+tmp_sb.toString());
-                    String tmp_str = new String(tmp_chars, 0, len);
-                    String tmp_strs[] = tmp_str.split("#EditorMessage#");
-                    //ErlLogger.debug("tmp_str:"+tmp_str);
-                    ErlLogger.debug("tmp_strs:"+tmp_strs.length);
-                    if (tmp_strs[0].equalsIgnoreCase("EditorMessageStart")){
-
-                        if (tmp_strs.length >2 ){
-                            ErlLogger.debug("EditorMessageStart:"+tmp_strs[2]);
-                            if (tmp_strs[2].equalsIgnoreCase("EditorMessageEnd")){
-                                ErlLogger.debug("EditorMessageStart: 2");
-                                download_store.put(this, process_msg(tmp_sb.toString()));
-                                tmp_sb = new StringBuilder();
-                            } else {
-                                ErlLogger.debug("EditorMessageStart: else");
-                                tmp_sb = tmp_sb.append(tmp_strs[1]);
-                            }
-                        } else if (tmp_strs.length == 2) {
-                            ErlLogger.debug("EditorMessageStart: else");
-                            tmp_sb = tmp_sb.append(tmp_strs[1]);
-                        }
-                    } else {
-                        if (tmp_strs.length >1 ){
-                            ErlLogger.debug("tmp_strs[1]:"+tmp_strs[1]);
-                            if (tmp_strs[1].equalsIgnoreCase("EditorMessageEnd")){
-                                ErlLogger.debug("EditorMessageEnd:");
-                                tmp_sb = tmp_sb.append(tmp_strs[0]);
-                                download_store.put(this, process_msg(tmp_sb.toString()));
-                                tmp_sb = new StringBuilder();
-                            } else {
-                                ErlLogger.debug("EditorMessageEnd: else");
-                                tmp_sb = tmp_sb.append(tmp_str);
-                            }
-                        }else {
-                            ErlLogger.debug("EditorMessageEnd: else");
-                            tmp_sb = tmp_sb.append(tmp_str);
-                        }
+                        break;
                     }
                 } catch (IOException e) {
                     // TODO Auto-generated catch block
@@ -273,4 +290,5 @@ public class SyncSocket {
     }
 
 }
+
 

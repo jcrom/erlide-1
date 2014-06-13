@@ -216,7 +216,7 @@ list_collection_items(Format, User) ->
 %%     AppendedInput = append_params(Input),
     CsKey = get_cskey(Type, Format),
     ?app_trace ("app/list_collection_items over ", [{cskey,CsKey},{input,Input}]),
-    Page = cs_api:render(CsKey, Input),
+    _Page = cs_api:render(CsKey, Input),
     {CsKey, Input}.
 
 %%根据collection菜单或者channel菜单返回不同的cs文件名称
@@ -233,7 +233,7 @@ get_cskey(channels,Format) ->
 %%     undefined,"tranfer1",0,1}
 %% 现在变更增加collection字段涉及改造产品太多部分代码，所以将非必须使用字段作为app中需添加字段
 %% 现在代码中将user_id作为菜单图片的名称字段，其实url在标准银行框架中也可以不需要可以用作菜单功能描述等说明。
-collection_to_cs_tuplelist(Format, collections, Items) ->
+collection_to_cs_tuplelist(_Format, collections, Items) ->
     ?ewp_log("Items is ==========~p~n",[Items]),
     gen_collection_list(Items);
 
@@ -243,7 +243,7 @@ collection_to_cs_tuplelist(Format, collections, Items) ->
 %%       [228,189,153,233,162,157,230,159,165,232,175,162],channel_adapter,undefined,
 %%       [{method,post},{encrypt_flag,0},{trancode,"mb01"}],1}
 %% 将json数据对应需要字段放在props里面然后获取。
-collection_to_cs_tuplelist(Format,channels, Items) ->
+collection_to_cs_tuplelist(_Format,channels, Items) ->
     ?ewp_log("Items is ==========~p~n",[Items]),
     gen_channel_list(Items).
 
@@ -310,7 +310,7 @@ requested_url(_, _Encrypted, _Id) ->
 append_params(Input) ->
     CheckInfo  = ?session("checkInfo"),
     LoginTimes = ?session("loginTimes"),
-    CardList   = ?session("ebankCardList"),
+    _CardList   = ?session("ebankCardList"),
     CustomName = ?session("customerName"),
     CollectionName = ?param("name"),
     %%[CardCSList, FList] = ebank_utils:cardlist_to_cs_params(CardList),
@@ -412,5 +412,3 @@ test_page() ->
     ewp_render_util:render_text("this is a test page").
 card_to_card() ->
     ewp_render_util:render_xml("xml for card to card").
-
-
