@@ -20,7 +20,7 @@ public class SyncSocket {
     private HashMap<ClientThread, String> download_store;
     private boolean status = false;
 
-    public int port = 8080;
+    public int port = 7003;
     public ServerSocket server = null;
     public ServerThread serverThread ;
     public Socket socket = null;
@@ -61,17 +61,23 @@ public class SyncSocket {
         try {
 
             for(int i = clients.size() -1; i >=0; i--){
-                clients.get(i).stop();
-                clients.get(i).getWriter().print("close");
+                ErlLogger.debug("client:"+i);
+                clients.get(i).getWriter().println("close");
                 clients.get(i).getWriter().flush();
-                clients.get(i).getWriter().close();
-                clients.get(i).getReader().close();
-                clients.get(i).writer.close();
-                clients.get(i).socket.close();
-                clients.remove(i);
+                //clients.get(i).stop1();
+                clients.get(i).socket.shutdownInput();
+                //clients.get(i).getReader().close();
+                //clients.get(i).getWriter().close();
+                //clients.get(i).writer.close();
+                //clients.get(i).socket.close();
+                //clients.get(i).stop1();
+                //clients.remove(i);
             }
-            if (serverThread != null)
+            if (serverThread != null){
+                serverThread.w_flag = false;
+                //serverThread.stop_server_socket();
                 serverThread.stop();
+            }
 
             ErlLogger.debug(" serverThread stop");
             if (server != null)
@@ -127,6 +133,7 @@ public class SyncSocket {
 
     class ServerThread extends Thread{
         private ServerSocket serverSocket;
+        public  boolean w_flag = true;
 
         public ServerThread(ServerSocket serverSocket){
             this.serverSocket = serverSocket;
@@ -134,7 +141,7 @@ public class SyncSocket {
 
         public void run(){
             ErlLogger.debug("ServerThread   run~");
-            while(true){
+            while(w_flag){
                 Socket socket;
                 try {
                     ErlLogger.debug("before accepted");
@@ -147,13 +154,26 @@ public class SyncSocket {
 
                 } catch (IOException e) {
                     // TODO Auto-generated catch block
+                    ErlLogger.debug("accept except~ion");
                     e.printStackTrace();
                 }
+            }
+        }
+
+        public void stop_server_socket(){
+            try {
+                if (!serverSocket.isClosed())
+                    serverSocket.close();
+            } catch (IOException e) {
+                ErlLogger.debug("socket server");
+                // TODO Auto-generated catch block
+                e.printStackTrace();
             }
         }
     }
 
     class ClientThread extends Thread{
+        private volatile Thread blinker;
         private Socket socket;
         private BufferedReader reader;
         private PrintWriter writer;
@@ -162,12 +182,26 @@ public class SyncSocket {
         StringBuilder tmp_sb = new StringBuilder();
         //private User user;
 
+        public void start(){
+            blinker = new Thread(this);
+            blinker.start();
+        }
+
+        public void stop1(){
+            ErlLogger.debug("client stop");
+            Thread moribund = blinker;
+            blinker = null;
+            moribund.interrupt();
+
+        }
+
         public ClientThread(Socket socket){
             try {
                 this.socket = socket;
                 InputStreamReader tmp_r = new InputStreamReader(socket.getInputStream());
 
                 reader = new BufferedReader(tmp_r);
+
                 writer = new PrintWriter(socket.getOutputStream());
                 ErlLogger.debug("new client!");
                 //String inf = reader.readLine();
@@ -183,10 +217,10 @@ public class SyncSocket {
         @SuppressWarnings("deprecation")
         public void run(){
 
-
+            Thread thisThread = Thread.currentThread();
             char tmp_chars[] = new char[1024];
             int len;
-            while(true){
+            while(blinker == thisThread){
                 try {
                     //message = reader.readLine();
                     len = reader.read(tmp_chars);
@@ -235,8 +269,11 @@ public class SyncSocket {
                             }
                         } else {
                             if (tmp_strs.length >1 ){
-                                ErlLogger.debug("tmp_strs[1]:"+tmp_strs[1]);
-                                if (tmp_strs[1].equalsIgnoreCase("EditorMessageEnd")){
+                                //ErlLogger.debug("tmp_strs:"+tmp_strs[1].length());
+                                //ErlLogger.debug("tmp_strs:"+tmp_strs[1].trim().length());
+                                ErlLogger.debug("result:" + tmp_strs[1].trim().equalsIgnoreCase("EditorMessageEnd"));
+
+                                if (tmp_strs[1].trim().equalsIgnoreCase("EditorMessageEnd")){
                                     ErlLogger.debug("EditorMessageEnd:");
                                     tmp_sb = tmp_sb.append(tmp_strs[0]);
                                     download_store.put(this, process_msg(tmp_sb.toString()));
@@ -246,23 +283,23 @@ public class SyncSocket {
                                     tmp_sb = tmp_sb.append(tmp_str);
                                 }
                             }else {
-                                ErlLogger.debug("EditorMessageEnd: else");
+                                //ErlLogger.debug("EditorMessageEnd: else");
                                 tmp_sb = tmp_sb.append(tmp_str);
                             }
                         }
                     } else {
-//                        reader.close();
-//                        writer.close();
-//                        socket.close();
-//
-//                        for(int i=clients.size()-1; i>=0;i-- ){
-//                            if (clients.get(i) == this){
-//                                ClientThread temp = clients.get(i);
-//                                clients.remove(i);
-//                                temp.stop();
-//                                break;
-//                            }
-//                        }
+                        reader.close();
+                        writer.close();
+                        socket.close();
+
+                        for(int i=clients.size()-1; i>=0;i-- ){
+                            if (clients.get(i) == this){
+                                ClientThread temp = clients.get(i);
+                                clients.remove(i);
+                                temp.stop1();
+                                break;
+                            }
+                        }
                         break;
                     }
                 } catch (IOException e) {
@@ -275,7 +312,7 @@ public class SyncSocket {
 
 
         private String process_msg(String msg){
-            ErlLogger.debug("msg:"+msg);
+            //ErlLogger.debug("msg:"+msg);
             String tmp_strs[] = msg.split("#EditorContent#");
             return tmp_strs[1];
         }

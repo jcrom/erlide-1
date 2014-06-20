@@ -52,7 +52,7 @@ public class SyncServerAction implements IEditorActionDelegate{
     private URL sync_on_png_url = null;
 
     public SyncSocket serverSocket = null;
-    public String port_str = "8080";
+    public String port_str = "7003";
 
     public SyncServerAction(){
         ErlLogger.debug("SyncSocketAction cons!");
@@ -92,6 +92,8 @@ public class SyncServerAction implements IEditorActionDelegate{
 //
 //         IContributionItem tmp1 = tmp.getToolBarManager().find("com.rytong.template.debugtool.SyncPageAction");
 //         tmp.getToolBarManager().
+
+
 
         ErlLogger.debug("port:" + serverSocket.port);
         AddDiaolog newDialog = new AddDiaolog(window.getShell());
@@ -135,6 +137,9 @@ public void selectionChanged(IAction action, ISelection selection) {
 public void setActiveEditor(IAction action, IEditorPart targetEditor) {
     // TODO Auto-generated method stub
     ErlLogger.debug("SyncSocketAction editor!");
+    if (serverSocket.getServerStatus()){
+        action.setImageDescriptor(createByRegistry(sync_down_key, sync_png_url));
+    }
 
 }
 
